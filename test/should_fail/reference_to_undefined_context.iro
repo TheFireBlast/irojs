@@ -1,0 +1,29 @@
+//TODO: detect invalid inclusions
+
+name						= example
+file_extensions []	= ex;
+
+contexts [] {
+
+main : context {
+	// Invalid reference.
+	// "js on" must refer to globally scoped instance of:
+	// [context]
+
+	// Uncaught TypeError: inclusions.get(...) is undefined
+   // checkRecursion compiler.ts:147
+	
+   : include "invalid" ;
+}
+
+}
+
+styles [] {
+
+.text : style {
+   color              = #DCD16A
+   textmate_scope     = string
+   pygments_scope     = String
+}
+
+}

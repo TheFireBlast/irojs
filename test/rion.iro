@@ -1,0 +1,150 @@
+// Rion Language Grammar Definition
+// Used in https://eeyo.io/iro/
+// Author: FireBlast (Github:TheFireBlast)
+
+name                     = rion
+file_extensions []       = iro;
+
+contexts [] {
+
+main : context {
+
+   // Include
+   : pattern {
+      regex             \= (:\s*)(include)
+      styles []          = .punctuation, .keyword;
+   }
+   
+   // inline_push
+   : inline_push {
+      regex             \= (\\=)
+      styles []          = .operator;
+      : eol_pop {}
+      : pattern {
+         regex          \= (\$\$\{)([^}]+)(\})
+         styles []       = .identifier;
+      }
+      : pattern {
+         regex          \= (.)
+         styles []       = .regexp;
+      }
+   }
+   : inline_push {
+      regex             \= ([a-zA-Z_0-9]+)(\s*\[\]\s*)(=)
+      styles []          = .identifier, .punctuation, .operator;
+      : pop {  
+         regex          \= (;)
+         styles []       = .punctuation;
+      }
+      : pattern {
+         regex          \= ($$\{)([^}])(\})
+         styles []       = .punctuation, .text, .punctuation;
+      }
+      : pattern {
+         regex          \= (,)
+         styles []       = .punctuation;
+      }
+      : pattern {
+         regex          \= (.)
+         styles []       = .text;
+      }
+   }
+   : pattern {
+      regex             \= (=)(.+)
+      styles []          = .operator, .text;
+   }
+
+   // Define type
+   : pattern {
+      regex             \= (:\s*)([a-zA-Z_0-9]+)
+      styles []          = .punctuation, .type;
+   }
+   
+   // Collection
+   : pattern {
+      regex             \= ([a-zA-Z_0-9]+)(\s*[\[{])
+      styles []          = .type, .punctuation;
+   }
+   
+   // String
+   : inline_push {
+      regex             \= (\")
+      styles []          = .punctuation;
+      default_style      = .text
+      : pop {
+         regex          \= (\")
+         styles []       = .punctuation;
+      }
+   }
+   
+   // Comment
+   : inline_push {
+      regex          \= (/\*)
+      styles []       = .comment;
+      default_style   = .comment
+      : pop {
+         regex       \= (\*/)
+         styles []    = .comment;
+      }
+   }
+   : pattern {
+      regex          \= ((#|//).*)
+      styles []       = .comment;
+   }
+   
+   // Punctuation
+   : pattern {
+      regex          \= ([{}\[\];])
+      styles []       = .punctuation;
+   }
+   
+}
+   
+}
+
+//==== Style ====//
+styles [] {
+
+.identifier : style {
+   color              = #EEFFFF
+   textmate_scope     = variable
+}
+.comment : style {
+   color              = #777766
+   italic             = true
+   textmate_scope     = comment
+   pygments_scope     = Comment
+}
+.text : style {
+   color              = #DCD16A
+   textmate_scope     = string
+   pygments_scope     = String
+}
+.keyword : style {
+   color              = #89DDFF
+   italic             = true
+   textmate_scope     = keyword.control
+   pygments_scope     = Keyword.Namespace
+}
+.type : style {
+   color              = #28DB28
+   textmate_scope     = storage.type
+   pygments_scope     = Keyword.Declaration
+}
+.operator : style {
+   color              = #C8195A
+   textmate_scope     = keyword.operator
+   pygments_scope     = Operator
+}
+.punctuation : style {
+   color              = #C8195A
+   textmate_scope     = punctuation
+   pygments_scope     = Punctuation
+}
+.regexp : style {
+   color              = #FF8800
+   textmate_scope     = string.regexp
+   pygments_scope     = String.Regex
+}
+
+}

@@ -1,0 +1,20 @@
+
+- [ ] Package
+    - [x] Textmate JSON
+    - [x] Textmate XML
+    - [x] Ace
+    - [ ] Atom
+    - [ ] Pygments
+    - [ ] Rouge
+    - [ ] Sublime 3
+- [ ] Website
+    - [x] Live preview
+    - [ ] Auto-completion
+    - [ ] Snippets
+    - [ ] Error/Warnings squiggles
+- [ ] Vscode Extension
+    - [ ] Extract colors from current theme
+    - [ ] Live preview
+    - [ ] Auto-completion
+    - [ ] Snippets
+    - [ ] Error/Warnings squiggles

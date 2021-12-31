@@ -1,0 +1,47 @@
+name = mylang
+file_extensions []= hello, world;
+
+__Identifier \= [a-z0-1_]+
+
+contexts [] {
+
+
+
+main : context {
+	: inline_push {
+		regex		\= (/\*)
+		styles []	 = .quoted_text;
+        default_style	 = .quoted_text
+		: pop {
+			regex		\= (\*/)
+			styles []	 = .quoted_text;
+		}
+	}
+	: include "A" ;
+}
+
+A : context {
+	: include "B" ;
+}
+B : context {
+	: include "C" ;
+}
+C : context {
+	: include "A" ;
+}
+
+
+
+}
+
+styles [] {
+
+.punctuation : style {
+   color				 = brown
+}
+.quoted_text : style {
+   color				 = yellow
+   pygments_scope		= String
+}
+
+}

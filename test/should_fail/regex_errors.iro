@@ -1,0 +1,28 @@
+//TODO: catch regex errors
+
+name						= example
+file_extensions []	= ex;
+
+contexts [] {
+
+main : context {
+   : pattern {
+      // eeyo -> Invalid regular expression : ([_-.]+)
+      // Quietly fails at -
+      // Uncaught SyntaxError: invalid range in character class
+      regex		   \= ([_-.]+)
+		styles []	 = .text;
+   }
+}
+
+}
+
+styles [] {
+
+.text : style {
+   color              = #DCD16A
+   textmate_scope     = string
+   pygments_scope     = String
+}
+
+}
