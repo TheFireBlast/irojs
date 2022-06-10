@@ -33,7 +33,10 @@ if (!parsingError) {
     fs.writeFileSync("out/ast.json", JSON.stringify(parsed, null, 4), "utf8");
 
     console.time("compiling took");
-    var result = compile(parsed);
+    var result = compile(parsed, {
+        textmate: true,
+        ace: true,
+    });
     console.timeEnd("compiling took");
 
     fs.writeFileSync("out/tmlanguage.json", JSON.stringify(result.textmate, null, 4), "utf8");

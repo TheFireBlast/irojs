@@ -1,24 +1,25 @@
-var input = "(a:a(/a)*)({)";
-
-// {
-//     const moo = require("moo");
-//     const lexer = moo.compile({
-//         pareno: /\(/,
-//         parenc: /\)/,
-//         esc: /\\./,
-//         body: /[^()\\\n]+/,
-//     });
-//     lexer.reset(input);
-//     let tkn;
-//     while ((tkn = lexer.next())) {
-//         console.log(tkn.type);
-//     }
-// }
+var input = "(a:a(/a)*)({)(()())";
 
 {
-    var list = [];
-    var captures = 1;
-    var depth = 0;
+    const moo = require("moo");
+    const lexer = moo.compile({
+        lparen: "(",
+        rparen: ")",
+        esc: /\\./,
+        body: /[^()\\\n]+/,
+    });
+    lexer.reset(input);
+    lexer;
+    let tkn;
+    while ((tkn = lexer.next())) {
+        console.log(tkn.type, tkn.text);
+    }
+}
+
+{
+    let list = [];
+    let captures = 1;
+    let depth = 0;
     for (let i = 0; i < input.length; i++) {
         let c = input[i];
         if (c == "(") {
@@ -33,5 +34,5 @@ var input = "(a:a(/a)*)({)";
             }
         }
     }
-    console.log(list)
+    console.log(list);
 }

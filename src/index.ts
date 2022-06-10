@@ -1,6 +1,7 @@
 import * as nearley from "nearley";
 import { compile as _compile, IroError } from "./compiler";
 import { Grammar, SourceLocationPosition } from "./nodes";
+import { NearleyError, isNearleyError } from "./utils";
 
 export * as nodes from "./nodes";
 export * as compiler from "./compiler";
@@ -8,17 +9,8 @@ export * as ScopeManager from "./ScopeManager";
 export type { IroError };
 export const Rion: nearley.CompiledRules = require("./rion");
 export const grammar = nearley.Grammar.fromCompiled(Rion);
-const NO_LOC = { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 0, offset: 0 } };
 
-interface NearleyError {
-    message: string;
-    offset: number;
-    token?: moo.Token;
-}
-function isNearleyError(err: any): err is NearleyError {
-    return err && err.message && typeof err.offset == "number";
-}
-
+//TODO: use handwritten parser
 export function getParser() {
     return new nearley.Parser(grammar);
 }

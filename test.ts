@@ -18,4 +18,4 @@ function getRegexGroups(regex: string) {
     return list;
 }
 
-console.log(getRegexGroups("([a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*)({)"))
+console.log(getRegexGroups("([a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)*)({)"));

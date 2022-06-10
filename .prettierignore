@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+package.json
+pnpm-ignore.yaml
+pnpm-lock.yaml
+README.md

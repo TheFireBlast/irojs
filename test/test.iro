@@ -17,7 +17,7 @@ contexts [] {
 main : context {
 	// Controls
 	: pattern {
-		regex		\= \b(while|if|else|as|at|return)\b
+		regex		\= \b(while|if|else|as|at|return)\b(a)
 		styles []	 = .control;
 	}
 	// New

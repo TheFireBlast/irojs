@@ -1,20 +1,23 @@
-
-- [ ] Package
-    - [x] Textmate JSON
-    - [x] Textmate XML
-    - [x] Ace
-    - [ ] Atom
-    - [ ] Pygments
-    - [ ] Rouge
-    - [ ] Sublime 3
-- [ ] Website
-    - [x] Live preview
-    - [ ] Auto-completion
-    - [ ] Snippets
-    - [ ] Error/Warnings squiggles
-- [ ] Vscode Extension
-    - [ ] Extract colors from current theme
-    - [ ] Live preview
-    - [ ] Auto-completion
-    - [ ] Snippets
-    - [ ] Error/Warnings squiggles
+-   [ ] Package
+    -   [ ] Targets
+        -   [x] Textmate JSON
+        -   [x] Textmate XML
+        -   [x] Ace
+        -   [ ] Atom
+        -   [ ] Pygments
+        -   [ ] Rouge
+        -   [ ] Sublime 3
+    -   [ ] Unit testing
+        -   [ ] Github workflow
+    -   [ ] Code coverage
+-   [ ] Website
+    -   [x] Live preview
+    -   [ ] Auto-completion
+    -   [ ] Snippets
+    -   [ ] Error/Warnings squiggles
+-   [ ] VSCode Extension
+    -   [ ] Extract colors from current theme
+    -   [ ] Live preview
+    -   [ ] Auto-completion
+    -   [ ] Snippets
+    -   [ ] Error/Warnings squiggles

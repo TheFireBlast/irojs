@@ -321,20 +321,20 @@ export function compile(ast: N.Grammar, options?: CompileOptions) {
             let groups = getRegexGroups(regex);
             let totalGroups = groups.reduce((a, b) => a + b);
             // If the styles only cover the top groups, expand
-            if(styleList.length == groups.length && groups.length != totalGroups){
+            if (styleList.length == groups.length && groups.length != totalGroups) {
                 let newList: typeof styleList = [];
                 for (let i = 0; i < styleList.length; i++) {
                     for (let j = 0; j < groups[i]; j++) newList.push(styleList[i]);
                 }
                 // Replace the styles array but keeping reference
                 styleList.splice(0, styleList.length, ...newList);
-            } 
+            }
             // Otherwise, if there's a mismatch, throw an error
-            else if(styleList.length != totalGroups){
+            else if (styleList.length != totalGroups) {
                 err("Number of styles and regexp groups doesn't match", stylesLoc, true);
             }
         }
-        
+
         enforceDotPrefix(styleList);
     }
 

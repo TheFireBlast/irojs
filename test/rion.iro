@@ -22,7 +22,7 @@ main : context {
       : eol_pop {}
       : pattern {
          regex          \= (\$\$\{)([^}]+)(\})
-         styles []       = .identifier;
+         styles []       = .punctuation, .identifier, .punctuation;
       }
       : pattern {
          regex          \= (.)
@@ -88,7 +88,7 @@ main : context {
       }
    }
    : pattern {
-      regex          \= ((#|//).*)
+      regex          \= ((?:#|//).*)
       styles []       = .comment;
    }
    

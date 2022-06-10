@@ -1,0 +1,1 @@
+@.\node_modules\.bin\swc src -d dist -s >NUL && node dist/cli %*

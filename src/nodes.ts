@@ -1,13 +1,4 @@
-export type Node =
-    | Grammar
-    | Collection
-    | Object
-    | Attribute
-    | Identifier
-    | String
-    | Value
-    | ValueElement
-    | Reference;
+export type Node = Grammar | Collection | Object | Attribute | Identifier | String | Value | ValueElement | Reference;
 
 export interface BaseNode {
     type: string;
