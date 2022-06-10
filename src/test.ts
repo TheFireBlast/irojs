@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { parse, compile, IroError, nodes } from "./index";
+import { prettyError } from "./utils";
 
 var input = fs.readFileSync("./test/test.iro", "utf8");
 var parsingError = false;
@@ -18,11 +19,14 @@ try {
             offset: e.offset,
         };
         console.log(
-            prettyError(lines, {
-                fatal: true,
-                message: "Invalid syntax",
-                location: { start: loc, end: loc },
-            })
+            prettyError(
+                {
+                    fatal: true,
+                    message: "Invalid syntax",
+                    location: { start: loc, end: loc },
+                },
+                lines
+            )
         );
     }
 }
@@ -46,42 +50,6 @@ if (!parsingError) {
 
     var lines = input.split("\n");
     for (let error of result.errors) {
-        console.log(prettyError(lines, error));
+        console.log(prettyError(error, lines));
     }
 }
-
-// function prettyHighlight(pre: string, err: string, post: string) {
-//     return pre + chalk.red.underline(err) + post;
-// }
-function prettyError(
-    code: string | string[],
-    error: IroError,
-    highlight?: (pre: string, err: string, post: string) => string
-) {
-    if (typeof code == "string") code = code.split("\n");
-    var output = `error: ${error.message}\n`;
-    var {
-        location: { start, end },
-    } = error;
-    var chunk = code.slice(start.line - 1, end.line).join("\n");
-    var length = Math.max(0, end.offset - start.offset);
-    var startOffset = start.column;
-    var highlighted = highlight
-        ? highlight(
-              chunk.slice(0, startOffset),
-              chunk.substr(startOffset, length),
-              chunk.slice(startOffset + length)
-          ).split("\n")
-        : chunk;
-    var ln = start.line;
-    for (let l of highlighted) {
-        output += (ln++).toString().padStart(2, "0") + " " + l + "\n";
-        output += " ".repeat(startOffset + 3) + "^" + "~".repeat(Math.max(0, length - 1)) + "\n"; //TODO: multiline
-    }
-    // ${" ".repeat(col + start.line.toString().length + 1)}^${"~".repeat(length)}`);
-    return output;
-}
-
-// (function wait() {
-//     setTimeout(wait, 1000);
-// })();

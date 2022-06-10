@@ -5,6 +5,7 @@ import { parse, compile, IroError, nodes, getParser } from "./index";
 import * as chalk from "chalk";
 import { Command, InvalidOptionArgumentError } from "commander";
 import * as path from "path";
+import { prettyError } from "./utils";
 
 const program = new Command();
 
@@ -97,27 +98,3 @@ program
     });
 
 program.parse();
-
-function prettyError(error: IroError, code: string | string[], filePath?: string) {
-    if (typeof code == "string") code = code.split("\n");
-    const color = chalk[error.fatal ? "red" : "yellow"];
-    const {
-        location: { start: s, end: e },
-    } = error;
-    const chunk = code.slice(s.line - 1, e.line).join("\n");
-    const length = Math.max(0, e.offset - s.offset);
-    const line = chunk.split("\n")[0];
-    const lineNumber = s.line.toString().padStart(2, "0");
-    var len = Math.max(0, Math.min(line.length - s.column, length));
-    const tabCorrectionPre = (line.slice(0, s.column).match(/\t/g) || []).length;
-    len += (line.slice(s.column, s.column + len).match(/\t/g) || []).length;
-    const offset = s.column + tabCorrectionPre;
-    const where = filePath
-        ? `${chalk.blue(filePath)}:${chalk.yellow(error.location.start.line)}:${chalk.yellow(
-              error.location.start.column + 1
-          )} - `
-        : "";
-    return `${where}${color(error.fatal ? "error" : "warning")}: ${error.message}
-${chalk.inverse(lineNumber)} ${line.replace(/\t/g, "  ")}
-${chalk.inverse(" ".repeat(lineNumber.length))} ${" ".repeat(offset)}${color("^" + "~".repeat(Math.max(0, len - 1)))}`;
-}
