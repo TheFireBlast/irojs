@@ -6,7 +6,7 @@ import { NearleyError, isNearleyError } from "./utils";
 export * as nodes from "./nodes";
 export * as compiler from "./compiler";
 export * as ScopeManager from "./ScopeManager";
-export type { IroError };
+export type { IroError, NearleyError };
 export const Rion: nearley.CompiledRules = require("./rion");
 export const grammar = nearley.Grammar.fromCompiled(Rion);
 

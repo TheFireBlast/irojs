@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
-import { parse, compile, IroError, nodes, NearleyError } from "../dist/index";
+import { parse, compile, nodes } from "../src/index";
 
 function testFile(file: string) {
     describe(file, function () {
