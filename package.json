@@ -12,7 +12,7 @@
         "build:swc": "swc src -d dist -s",
         "build:rion": "nearleyc src/rion.ne -o dist/rion.js",
         "build:types": "tsc --emitDeclarationOnly",
-        "build": "shx mkdir dist && npm-run-all --parallel build:swc build:types build:rion",
+        "build": "shx mkdir -p dist && npm-run-all --parallel build:swc build:types build:rion",
         "format": "prettier --write .",
         "test:build:rion": "nearleyc src/rion.ne -o src/rion.js",
         "test:ts": "tsc --noEmit",
