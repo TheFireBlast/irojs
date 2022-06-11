@@ -2,7 +2,9 @@
     "name": "irojs",
     "version": "0.1.0",
     "main": "dist/index.js",
-    "bin": "dist/cli.js",
+    "bin": {
+        "iro": "dist/cli.js"
+    },
     "author": "FireBlast",
     "license": "MIT",
     "homepage": "https://thefireblast.github.io/irojs",
