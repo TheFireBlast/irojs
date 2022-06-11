@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as fs from "fs";
 import { parse, compile, IroError, nodes, getParser } from "./index";
 import * as chalk from "chalk";

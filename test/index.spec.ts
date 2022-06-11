@@ -5,7 +5,7 @@ import { parse, compile, nodes } from "../src/index";
 
 function testFile(file: string) {
     describe(file, function () {
-        var input = fs.readFileSync(path.join(__dirname, file), "utf8");
+        var input = fs.readFileSync(path.join(__dirname, "grammars", file), "utf8");
         var ast!: nodes.Grammar;
         it("should parse", function () {
             expect(() => (ast = parse(input))).to.not.throw();
@@ -22,6 +22,7 @@ function testFile(file: string) {
         // if (compiled?.errors.length > 0) {
         //     console.log(compiled.errors);
         // }
+        //TODO: test if the outputs are valid and work as intended
     });
 }
 
@@ -31,7 +32,3 @@ describe("Grammars", function () {
     testFile("rion.iro");
     testFile("redlapis.iro");
 });
-
-// describe("CLI", function() {
-
-// })

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { parse, compile, IroError, nodes } from "./index";
 import { prettyError } from "./utils";
 
-var input = fs.readFileSync("./test/test.iro", "utf8");
+var input = fs.readFileSync("./test/grammars/test.iro", "utf8");
 var parsingError = false;
 console.time("parsing took");
 try {

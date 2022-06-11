@@ -127,13 +127,16 @@ function getRegexGroups(regex: string) {
     return list;
 }
 
-interface CompileOptions {
-    textmate?: boolean;
-    ace?: boolean;
-    aceDefaultToken?: boolean;
+export interface CompileOptions {
+    /**Compíle to textmate format */
+    textmate: boolean;
+    /**Compíle to ace format */
+    ace: boolean;
+    /**Emit default token when compiling to ace */
+    aceDefaultToken: boolean;
 }
 
-export function compile(ast: N.Grammar, options?: CompileOptions) {
+export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
     options = Object.assign(
         <CompileOptions>{
             textmate: true,
@@ -640,6 +643,7 @@ export function compile(ast: N.Grammar, options?: CompileOptions) {
     }
 
     traverse(ast);
+    
     if (!errors.find((e) => e.fatal)) {
         // Expand includes
         for (let r in aceGrammar.rules) {

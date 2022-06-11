@@ -1,5 +1,5 @@
 import * as nearley from "nearley";
-import { compile as _compile, IroError } from "./compiler";
+import { compile as _compile, CompileOptions, IroError } from "./compiler";
 import { Grammar, SourceLocationPosition } from "./nodes";
 import { NearleyError, isNearleyError } from "./utils";
 
@@ -36,7 +36,7 @@ export function parse(input: string): Grammar {
 }
 export function compile(
     input: string | Grammar,
-    options?: Parameters<typeof _compile>[1]
+    options?: Partial<CompileOptions>
 ): ReturnType<typeof _compile> {
     var ast: Grammar;
     if (typeof input == "string") {

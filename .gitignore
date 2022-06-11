@@ -1,4 +1,6 @@
 node_modules/
-dist/
-out/
+/dist/
+/out/
+/test/out/
+# for running with @swc/register
 src/rion.js
