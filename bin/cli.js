@@ -1,3 +1,3 @@
 const { createCommand } = require("../dist/cli");
 
-createCommand().parse();
+createCommand(true).parse();
