@@ -72,19 +72,20 @@ export interface AceGrammar {
         [s: string]: AcePattern[];
     };
 }
-export type AcePattern =
-    | {
-          token: string | string[];
-          regex: string;
-          next?: string;
-          push?: string;
-      }
-    | {
-          defaultToken: string;
-      }
-    | {
-          include: string;
-      };
+export interface AcePatternGeneral {
+    token: string | string[];
+    regex: string;
+    next?: string;
+    push?: string;
+}
+
+export interface AcePatternDefaultToken {
+    defaultToken: string;
+}
+export interface AcePatternInclude {
+    include: string;
+}
+export type AcePattern = AcePatternGeneral | AcePatternDefaultToken | AcePatternInclude;
 
 export interface Style {
     name: string;
@@ -168,8 +169,10 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         if (stack.length > 10) return [...stack.slice(0, 5), "[...]"];
         if (stack[0] == stack[1]) return stack;
 
-        var target = stack[stack.length - 1];
-        for (var targetOfTarget of inclusions.get(target)) {
+        var targetName = stack[stack.length - 1];
+        var target = inclusions.get(targetName);
+        if (!target) return null;
+        for (var targetOfTarget of target) {
             var _stack = [...stack, targetOfTarget];
             if (stack.includes(targetOfTarget)) return _stack;
             var res = checkRecursion(_stack);
@@ -183,7 +186,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
     const mandatory = <T extends N.Attribute["type"]>(name: string, type: T, node: N.Object) => {
         var attr = getNamedNode(name, type, node.body);
         if (attr) return attr;
-        else err(`Could not find mandatory attribute '${name}'`, node.loc, true);
+        else return err(`Could not find mandatory attribute '${name}'`, node.loc, true) as typeof attr;
     };
     var styles = new Map<string, Style>();
     const getStyle = (name: string, node: N.Value) => {
@@ -192,7 +195,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         else err(`Could not find style '${name}'`, node.loc, true);
     };
     var currentCollection: string;
-    var currentTMContext: { patterns: TMPattern[] };
+    var currentTMContext: TMPatternComplex & { patterns: TMPattern[] };
     var currentAceRule: string;
 
     const aceSubRule = (rule: string) => {
@@ -305,7 +308,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
             try {
                 new RegExp(regex);
                 return true;
-            } catch (e) {
+            } catch (e: any) {
                 err(e.message || "Invalid regular expression", loc, true);
                 return false;
             }
@@ -387,7 +390,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
                     return err(`Duplicate collection '${name}'`, node.name.loc, true);
                 }
                 for (let n of node.body) {
-                    if (name == "styles" && n.type == "Object" && n.name.name[0] != ".") {
+                    if (name == "styles" && n.type == "Object" && n.name && n.name.name[0] != ".") {
                         err(
                             `Type identifiers must start with a dot. Did you mean to write '.${n.name.name}'?`,
                             n.name.loc,
@@ -403,7 +406,8 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         } else if (node.type == "Object") {
             let name = node.name?.name;
             let kind = node.kind.name;
-            if (scopes.current == scopes.global) {
+            // If we are on the top/global scope
+            if (!scopes.current.parent) {
                 let errorMessage = `Unexpected global object ${name ? `'${name}'` : ""}`;
                 if (kind == "context" || kind == "pattern")
                     errorMessage += ". Did you mean to place it inside collection 'contexts'?";
@@ -412,7 +416,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
                 err(errorMessage, node.loc, true);
                 return;
             }
-            if (name == "__proto__") {
+            if (node.name?.name == "__proto__") {
                 err("Prototype pollution", node.name.loc, true);
                 return;
             }
@@ -422,236 +426,253 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
                 return;
             }
             registerAttributes(node.body);
-            if (kind == "pattern") {
-                let regexNode = mandatory("regex", "RegexAttribute", node);
-                let stylesNode = mandatory("styles", "ArrayAttribute", node);
-                let regex = scopes.get(regexNode.name.name).expanded as string;
-                let styleList: [string, N.Value][] = (scopes.get(stylesNode.name.name).expanded as string[]).map(
-                    (v, i) => [v, stylesNode.value[i]]
-                );
-                validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
-
-                if (styleList.length == 1) {
-                    let style = getStyle(styleList[0][0], styleList[0][1]);
-                    currentTMContext.patterns.push({ name: style.textmate, match: regex });
-                    aceGrammar.rules[currentAceRule].push({ token: style.ace, regex: regex });
-                } else {
-                    let tmCaptures: TMCaptures = {};
-                    let aceTokens: string[] = [];
-                    let i = 1;
-                    for (let styleInfo of styleList) {
-                        let style = getStyle(styleInfo[0], styleInfo[1]);
-                        if (!style) continue;
-                        tmCaptures[i++] = { name: style.textmate };
-                        aceTokens.push(style.ace);
-                    }
-                    currentTMContext.patterns.push({ match: regex, captures: tmCaptures });
-                    aceGrammar.rules[currentAceRule].push({ token: aceTokens, regex: regex });
-                }
-            } else if (kind == "push") {
-                //TODO: implement push
-                err(`Missing implementation for 'push', try using 'inline_push' instead`, node.kind.loc, true);
-            } else if (kind == "inline_push") {
-                let invalid = false;
-                let regexNode = mandatory("regex", "RegexAttribute", node);
-                let stylesNode = mandatory("styles", "ArrayAttribute", node);
-                if (!regexNode || !stylesNode) invalid = true;
-                let defaultStyleNode = getNamedNode("default_style", "BasicAttribute", node.body);
-                if (!node.body.find((n) => n.type == "Object")) {
-                    err("Please supply one or more inline list items", node.loc, true);
-                    invalid = true;
-                }
-                let pop = node.body.filter(
-                    (n) => n.type == "Object" && (n.kind.name == "pop" || n.kind.name == "eol_pop")
-                ) as N.Object[];
-                if (pop.length == 0) {
-                    err("missing pop object", node.loc, true);
-                    invalid = true;
-                }
-                if (pop.length > 1) {
-                    err("too many pop objects", { start: pop[1].loc.start, end: pop[pop.length - 1].loc.end }, true);
-                    invalid = true;
-                }
-                let hasNonPop = node.body.find(
-                    (n) => n.type == "Object" && n.kind.name != "pop" && n.kind.name != "eol_pop"
-                );
-                if (hasNonPop && defaultStyleNode) {
-                    err(
-                        "Cannot set a default Style if a non-pop rule is provided or included (textmate mode)",
-                        defaultStyleNode.loc,
-                        true
-                    );
-                    invalid = true;
-                }
-                if (!hasNonPop && !defaultStyleNode) {
-                    err("Please supply a default Style for this rule (textmate mode)", node.loc, true);
-                    invalid = true;
-                }
-                if (!invalid) {
-                    let regex = scopes.get(regexNode.name.name).expanded as string;
-                    let styleList: [string, N.Value][] = (scopes.get(stylesNode.name.name).expanded as string[]).map(
-                        (v, i) => [v, stylesNode.value[i]]
-                    );
+            try {
+                if (kind == "pattern") {
+                    let regexNode = mandatory("regex", "RegexAttribute", node);
+                    let stylesNode = mandatory("styles", "ArrayAttribute", node);
+                    if (!regexNode || !stylesNode) return;
+                    let regex = scopes.get<true>(regexNode.name.name).expanded as string;
+                    let styleList: [string, N.Value][] = (
+                        scopes.get<true>(stylesNode.name.name).expanded as string[]
+                    ).map((v, i) => [v, stylesNode.value[i]]);
                     validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
 
-                    let defaultStyle = defaultStyleNode && (scopes.get(defaultStyleNode.name.name).expanded as string);
-                    defaultStyleNode && enforceDotPrefix([[defaultStyle, defaultStyleNode.value]]);
-                    let tmPattern: TMPattern = {
-                        begin: regex,
-                        beginCaptures: {},
-                        end: null,
-                        endCaptures: {},
-                        patterns: [],
-                    };
+                    if (styleList.length == 1) {
+                        let style = getStyle(styleList[0][0], styleList[0][1]);
+                        if (style) {
+                            currentTMContext.patterns.push({ name: style.textmate, match: regex });
+                            aceGrammar.rules[currentAceRule].push({ token: style.ace, regex: regex });
+                        }
+                    } else {
+                        let tmCaptures: TMCaptures = {};
+                        let aceTokens: string[] = [];
+                        let i = 1;
+                        for (let styleInfo of styleList) {
+                            let style = getStyle(styleInfo[0], styleInfo[1]);
+                            if (!style) continue;
+                            tmCaptures[i++] = { name: style.textmate };
+                            aceTokens.push(style.ace);
+                        }
+                        currentTMContext.patterns.push({ match: regex, captures: tmCaptures });
+                        aceGrammar.rules[currentAceRule].push({ token: aceTokens, regex: regex });
+                    }
+                } else if (kind == "push") {
+                    //TODO: implement push
+                    err(`Missing implementation for 'push', try using 'inline_push' instead`, node.kind.loc, true);
+                } else if (kind == "inline_push") {
+                    let invalid = false;
+                    let regexNode = mandatory("regex", "RegexAttribute", node);
+                    let stylesNode = mandatory("styles", "ArrayAttribute", node);
+                    let defaultStyleNode = getNamedNode("default_style", "BasicAttribute", node.body);
+                    if (!node.body.find((n) => n.type == "Object")) {
+                        err("Please supply one or more inline list items", node.loc, true);
+                        invalid = true;
+                    }
+                    let pop = node.body.filter(
+                        (n) => n.type == "Object" && (n.kind.name == "pop" || n.kind.name == "eol_pop")
+                    ) as N.Object[];
+                    if (pop.length == 0) {
+                        err("missing pop object", node.loc, true);
+                        invalid = true;
+                    }
+                    if (pop.length > 1) {
+                        err(
+                            "too many pop objects",
+                            { start: pop[1].loc.start, end: pop[pop.length - 1].loc.end },
+                            true
+                        );
+                        invalid = true;
+                    }
+                    let hasNonPop = node.body.find(
+                        (n) => n.type == "Object" && n.kind.name != "pop" && n.kind.name != "eol_pop"
+                    );
+                    if (hasNonPop && defaultStyleNode) {
+                        err(
+                            "Cannot set a default Style if a non-pop rule is provided or included (textmate mode)",
+                            defaultStyleNode.loc,
+                            true
+                        );
+                        invalid = true;
+                    }
+                    if (!hasNonPop && !defaultStyleNode) {
+                        err("Please supply a default Style for this rule (textmate mode)", node.loc, true);
+                        invalid = true;
+                    }
+                    if (regexNode && stylesNode && !invalid) {
+                        let regex = scopes.get<true>(regexNode.name.name).expanded as string;
+                        let styleList: [string, N.Value][] = (
+                            scopes.get<true>(stylesNode.name.name).expanded as string[]
+                        ).map((v, i) => [v, stylesNode.value[i]]);
+                        validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
+
+                        let defaultStyle =
+                            defaultStyleNode && (scopes.get<true>(defaultStyleNode.name.name).expanded as string);
+                        defaultStyleNode && enforceDotPrefix([[defaultStyle, defaultStyleNode.value]]);
+                        let tmPattern: any = {
+                            begin: regex,
+                            beginCaptures: {},
+                            end: undefined,
+                            endCaptures: {},
+                            patterns: [],
+                        };
+                        let acePattern: any = {
+                            token: [],
+                            regex: regex,
+                            push: aceSubRule(currentAceRule),
+                        };
+                        currentTMContext.patterns.push(tmPattern);
+                        aceGrammar.rules[currentAceRule].push(acePattern);
+
+                        let i = 1;
+                        for (let styleInfo of styleList) {
+                            let style = getStyle(styleInfo[0], styleInfo[1]);
+                            if (!style) continue;
+                            tmPattern.beginCaptures[i++] = { name: style.textmate };
+                            (acePattern.token as string[]).push(style.ace);
+                        }
+                        if (acePattern.token.length == 1) acePattern.token = acePattern.token[0];
+
+                        let _currentTMContext = currentTMContext,
+                            _currentAceContext = currentAceRule;
+                        currentTMContext = tmPattern as any;
+                        currentAceRule = acePattern.push;
+                        for (let n of node.body) {
+                            if (!isAttribute(n)) traverse(n);
+                        }
+                        currentAceRule = _currentAceContext;
+                        currentTMContext = _currentTMContext;
+                        if (tmPattern.patterns.length == 0) delete tmPattern.patterns;
+                        if (defaultStyle) {
+                            let style = getStyle(defaultStyle, defaultStyleNode.value);
+                            if (!style) return; //TODO: error: no styles defined
+                            tmPattern.contentName = style.textmate;
+                            aceGrammar.rules[acePattern.push].push({ defaultToken: style.ace });
+                        }
+                    }
+                } else if (kind == "pop" && currentTMContext["beginCaptures"]) {
+                    let regexNode = mandatory("regex", "RegexAttribute", node);
+                    let stylesNode = mandatory("styles", "ArrayAttribute", node);
+                    if (!regexNode || !stylesNode) return;
+                    var regex = scopes.get<true>(regexNode.name.name).expanded as string;
+                    let styleList: [string, N.Value][] = (
+                        scopes.get<true>(stylesNode.name.name).expanded as string[]
+                    ).map((v, i) => [v, stylesNode.value[i]]);
+                    validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
+
+                    let tmPattern = currentTMContext as TMPatternComplex;
                     let acePattern: AcePattern = {
                         token: [],
                         regex: regex,
-                        push: aceSubRule(currentAceRule),
+                        next: "pop",
                     };
-                    currentTMContext.patterns.push(tmPattern);
                     aceGrammar.rules[currentAceRule].push(acePattern);
+                    tmPattern.end = regex;
 
                     let i = 1;
                     for (let styleInfo of styleList) {
                         let style = getStyle(styleInfo[0], styleInfo[1]);
                         if (!style) continue;
-                        tmPattern.beginCaptures[i++] = { name: style.textmate };
+                        tmPattern.endCaptures[i++] = { name: style.textmate };
                         (acePattern.token as string[]).push(style.ace);
                     }
                     if (acePattern.token.length == 1) acePattern.token = acePattern.token[0];
+                } else if (kind == "eol_pop") {
+                    let anyStyle: Style = styles.entries().next().value;
+                    currentTMContext["end"] = EOL_REGEX;
+                    currentTMContext["endCaptures"]["1"] = { name: anyStyle.textmate };
+                    aceGrammar.rules[currentAceRule].push({
+                        token: anyStyle.ace,
+                        regex: EOL_REGEX,
+                        next: "pop",
+                    });
+                } else if (kind == "include") {
+                    let current = scopes.current.parent.name;
+                    let target = (node.body[0] as N.String).value;
+                    let valid = true;
 
-                    let _currentTMContext = currentTMContext,
-                        _currentAceContext = currentAceRule;
-                    currentTMContext = tmPattern as any;
-                    currentAceRule = acePattern.push;
+                    if (!inclusions.has(target)) {
+                        err(`Unknown context '${target}'`, node.body[0].loc, true);
+                        return;
+                    }
+
+                    // console.log(scopes.current);
+                    // if (targets.indexOf(n) != i) {
+                    //     err("Redundant include", includeList[i].loc, true); //TODO: make this a warning instead
+                    // }
+
+                    // Test for circular inclusions
+                    let result = checkRecursion([current, target]);
+                    if (result && current == result[result.length - 1]) {
+                        var trace = result.join(" → ");
+                        err(`Cyclic inclusion detected (${trace})`, node.loc, true);
+                        valid = false;
+                    }
+                    if (valid) {
+                        currentTMContext.patterns.push({ include: "#" + target });
+                        //NOTE: Include doesn't exist in ace, we're just adding this to be replaced later
+                        aceGrammar.rules[currentAceRule].push({ include: target });
+                    }
+                } else if (kind == "context") {
+                    if (currentCollection != "contexts") {
+                        err(
+                            `Unexpected object type ${kind}. Did you mean to place it in collection 'contexts'?`,
+                            node.kind.loc,
+                            true
+                        );
+                        return;
+                    }
+                    if (!name) return err(`Unnamed context`, node.loc, false);
+                    //@ts-expect-error
+                    tmGrammar.repository[name] = currentTMContext = { patterns: [] };
+                    aceGrammar.rules[(currentAceRule = name)] = [];
                     for (let n of node.body) {
                         if (!isAttribute(n)) traverse(n);
                     }
-                    currentAceRule = _currentAceContext;
-                    currentTMContext = _currentTMContext;
-                    if (tmPattern.patterns.length == 0) delete tmPattern.patterns;
-                    if (defaultStyle) {
-                        let style = getStyle(defaultStyle, defaultStyleNode.value);
-                        if (!style) return; //TODO: error: no styles defined
-                        tmPattern.contentName = style.textmate;
-                        aceGrammar.rules[acePattern.push].push({ defaultToken: style.ace });
-                    }
+                    currentTMContext = null as any;
+                } else if (kind == "style") {
+                    if (currentCollection == "styles") {
+                        if (!name) return err(`Unnamed style`, node.loc, false);
+                        let style: Style = {
+                            name: name,
+                            textmate: "text." + tmGrammar.name,
+                            ace: "text." + tmGrammar.name,
+                        };
+                        let color = s.get("color")?.expanded as string;
+                        if (color) style.color = color;
+                        let textmate = s.get("textmate_scope")?.expanded as string;
+                        let ace = s.get("ace_scope")?.expanded as string;
+                        if (textmate) style.textmate = textmate + "." + tmGrammar.name;
+                        if (ace) style.ace = ace;
+                        if (textmate && !ace) style.ace = textmate;
+                        if (!textmate && ace) style.textmate = style.ace;
+                        styles.set(name, style);
+                    } else
+                        err(
+                            `Unexpected object type ${kind}. Did you mean to place it in collection 'styles'?`,
+                            node.kind.loc,
+                            true
+                        );
+                } else {
+                    err(`Unexpected object type ${kind}`, node.kind.loc, true);
                 }
-            } else if (kind == "pop" && currentTMContext["beginCaptures"]) {
-                let regexNode = mandatory("regex", "RegexAttribute", node);
-                let stylesNode = mandatory("styles", "ArrayAttribute", node);
-                if (!regexNode || !stylesNode) return;
-                var regex = scopes.get(regexNode.name.name).expanded as string;
-                let styleList: [string, N.Value][] = (scopes.get(stylesNode.name.name).expanded as string[]).map(
-                    (v, i) => [v, stylesNode.value[i]]
-                );
-                validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
-
-                let tmPattern = currentTMContext as TMPatternComplex;
-                let acePattern: AcePattern = {
-                    token: [],
-                    regex: regex,
-                    next: "pop",
-                };
-                aceGrammar.rules[currentAceRule].push(acePattern);
-                tmPattern.end = regex;
-
-                let i = 1;
-                for (let styleInfo of styleList) {
-                    let style = getStyle(styleInfo[0], styleInfo[1]);
-                    if (!style) continue;
-                    tmPattern.endCaptures[i++] = { name: style.textmate };
-                    (acePattern.token as string[]).push(style.ace);
-                }
-                if (acePattern.token.length == 1) acePattern.token = acePattern.token[0];
-            } else if (kind == "eol_pop") {
-                let anyStyle: Style = styles.entries().next().value;
-                currentTMContext["end"] = EOL_REGEX;
-                currentTMContext["endCaptures"]["1"] = { name: anyStyle.textmate };
-                aceGrammar.rules[currentAceRule].push({
-                    token: anyStyle.ace,
-                    regex: EOL_REGEX,
-                    next: "pop",
-                });
-            } else if (kind == "include") {
-                let current = scopes.current.parent.name;
-                let target = (node.body[0] as N.String).value;
-                let valid = true;
-
-                if (!inclusions.has(target)) {
-                    err(`Unknown context '${target}'`, node.body[0].loc, true);
-                    return scopes.pop();
-                }
-
-                // console.log(scopes.current);
-                // if (targets.indexOf(n) != i) {
-                //     err("Redundant include", includeList[i].loc, true); //TODO: make this a warning instead
-                // }
-
-                // Test for circular inclusions
-                let result = checkRecursion([current, target]);
-                if (result && current == result[result.length - 1]) {
-                    var trace = result.join(" → ");
-                    err(`Cyclic inclusion detected (${trace})`, node.loc, true);
-                    valid = false;
-                }
-                if (valid) {
-                    currentTMContext.patterns.push({ include: "#" + target });
-                    //NOTE: Include doesn't exist in ace, we're just adding this to be replaced later
-                    aceGrammar.rules[currentAceRule].push({ include: target });
-                }
-            } else if (kind == "context") {
-                if (currentCollection != "contexts")
-                    err(
-                        `Unexpected object type ${kind}. Did you mean to place it in collection 'contexts'?`,
-                        node.kind.loc,
-                        true
-                    );
-                tmGrammar.repository[name] = currentTMContext = { patterns: [] };
-                aceGrammar.rules[(currentAceRule = name)] = [];
-                for (let n of node.body) {
-                    if (!isAttribute(n)) traverse(n);
-                }
-                currentTMContext = null;
-            } else if (kind == "style") {
-                if (currentCollection == "styles") {
-                    let style: Style = {
-                        name: name,
-                        textmate: "text." + tmGrammar.name,
-                        ace: "text." + tmGrammar.name,
-                    };
-                    let color = s.get("color")?.expanded as string;
-                    if (color) style.color = color;
-                    let textmate = s.get("textmate_scope")?.expanded as string;
-                    let ace = s.get("ace_scope")?.expanded as string;
-                    if (textmate) style.textmate = textmate + "." + tmGrammar.name;
-                    if (ace) style.ace = ace;
-                    if (textmate && !ace) style.ace = textmate;
-                    if (!textmate && ace) style.textmate = style.ace;
-                    styles.set(name, style);
-                } else
-                    err(
-                        `Unexpected object type ${kind}. Did you mean to place it in collection 'styles'?`,
-                        node.kind.loc,
-                        true
-                    );
-            } else {
-                err(`Unexpected object type ${kind}`, node.kind.loc, true);
+            } finally {
+                // ensures pop gets called even if we return after an erorr
+                scopes.pop();
             }
-            scopes.pop();
         } else throw new Error("Unexpected node type " + node["type"]);
     }
 
     traverse(ast);
-    
+
     if (!errors.find((e) => e.fatal)) {
         // Expand includes
         for (let r in aceGrammar.rules) {
             //TODO: prevent circular includes
             let rule = aceGrammar.rules[r];
             let pos: number;
-            while ((pos = rule.findIndex((p) => p["include"])) > -1) {
-                let target = rule[pos]["include"];
+            //TODO: improve performance by finding from last index + added items
+            while ((pos = rule.findIndex((p) => "include" in p)) > -1) {
+                let target = (rule[pos] as AcePatternInclude)["include"];
                 // console.log(r, target, aceGrammar.rules[target]);
                 rule.splice(pos, 1, ...aceGrammar.rules[target]);
             }
@@ -665,7 +686,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
             // Add default token
             else if (options.aceDefaultToken) {
                 let rr = aceGrammar.rules[r];
-                if (!rr[rr.length - 1]?.["defaultToken"]) rr.push({ defaultToken: "text" });
+                if (rr.length > 0 && "defaultToken" in rr[rr.length - 1]) rr.push({ defaultToken: "text" });
             }
         }
     }
@@ -675,10 +696,8 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         textmate: tmGrammar,
         ace: aceGrammar,
         makeTextmateXML: () => js2plist(tmGrammar as any),
-        makeAceHighlighter: makeAceHighlighter.bind(this, aceGrammar) as (
-            options?: makeAceHighlighterOptions
-        ) => string,
-        makeCss: makeCss.bind(this, styles),
+        makeAceHighlighter: (options?: makeAceHighlighterOptions) => makeAceHighlighter(aceGrammar, options),
+        makeCss: () => makeCss(styles),
         styles,
         global: scopes.global,
         ast,

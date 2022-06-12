@@ -50,13 +50,17 @@ export class ScopeManager {
     set(name: string, value: Attribute) {
         this.current.set(name, new CompiledAttribute(name, value.type, this.current, value));
     }
-    get(name: string, scope: Scope = this.current) {
+    get<certain extends boolean>(
+        name: string,
+        scope: Scope = this.current
+    ): certain extends true ? CompiledAttribute : CompiledAttribute | undefined {
         var s: Scope | undefined = scope;
         while (s) {
             var x = s.get(name);
             if (x !== undefined) return x;
             s = s.parent;
         }
+        //@ts-expect-error
         return undefined;
     }
     getPath(scope = this.current) {

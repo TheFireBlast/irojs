@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "moduleResolution": "node",
+        "lib": ["es2021"],
         "target": "es2020",
 
         "module": "commonjs",
@@ -9,7 +11,7 @@
         "outDir": "./dist",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "strict": false,
+        "strict": true,
         "skipLibCheck": true
     },
     "include": ["src/**/*"]
