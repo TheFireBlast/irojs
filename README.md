@@ -1,5 +1,5 @@
 <center><h1>Iro.js</h1></center>
-<center>A language grammar generator for syntax highlighters.</center>
+<center>A grammar generator for syntax highlighters.</center>
 <br>
 
 <!-- Check out the live editor at https://fireblast.js.org/irojs -->

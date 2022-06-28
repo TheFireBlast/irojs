@@ -6,6 +6,7 @@ contexts [] {
 main : context {
 	: pattern {
 		regex		\= \b(hello world)\b
+		styles []	 = .text;
 	}
 }
 

@@ -10,6 +10,8 @@
     -   [ ] Unit testing
         -   [ ] Github workflow
     -   [ ] Code coverage
+    -   [ ] Move to chevrotain
+    -   [ ] Add more comments
 -   [ ] Website
     -   [x] Live preview
     -   [ ] Auto-completion

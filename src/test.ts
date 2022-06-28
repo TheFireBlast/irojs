@@ -3,13 +3,12 @@ import { parse, compile, IroError, nodes } from "./index";
 import { prettyError } from "./utils";
 
 var input = fs.readFileSync("./test/grammars/test.iro", "utf8");
-var parsingError = false;
+var parsed!: nodes.Grammar;
 console.time("parsing took");
 try {
-    var parsed = parse(input);
+    parsed = parse(input);
 } catch (e: any) {
     console.log(e.message);
-    parsingError = true;
     let lines = input.split("\n");
     let linecol = (e.message as string).match(/invalid syntax at line (\d+) col (\d+):/);
     if (linecol) {
@@ -31,7 +30,7 @@ try {
     }
 }
 console.timeEnd("parsing took");
-if (!parsingError) {
+if (parsed) {
     fs.mkdirSync("out", { recursive: true });
 
     fs.writeFileSync("out/ast.json", JSON.stringify(parsed, null, 4), "utf8");
