@@ -129,26 +129,24 @@ function getRegexGroups(regex: string) {
 }
 
 export interface CompileOptions {
-    /**Compíle to textmate format */
-    textmate: boolean;
-    /**Compíle to ace format */
-    ace: boolean;
+    /**Compílation targets */
+    targets: ("textmate" | "ace")[];
     /**Emit default token when compiling to ace */
     aceDefaultToken: boolean;
 }
 
-export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
-    options = Object.assign(
+export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
+    var options: CompileOptions = Object.assign(
         <CompileOptions>{
-            textmate: true,
-            ace: true,
+            targets: [],
             aceDefaultToken: true,
         },
-        options
+        _options
     );
+
     //TODO: selective compiling
-    const TEXTMATE = options.textmate;
-    const ACE = options.ace;
+    const TEXTMATE = options.targets.includes("textmate");
+    const ACE = options.targets.includes("ace");
 
     var tmGrammar: TMGrammar = {
         name: "",
@@ -164,8 +162,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
     var scopes = new ScopeManager();
     var inclusions: Map<string, string[]> = new Map();
 
-    const checkRecursion = (stack: string[]): string[] | null => {
-        // console.log(`testRecursion ${stack.join(" > ")}`);
+    function checkRecursion(stack: string[]): string[] | null {
         if (stack.length > 10) return [...stack.slice(0, 5), "[...]"];
         if (stack[0] == stack[1]) return stack;
 
@@ -179,26 +176,26 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
             if (res) return res;
         }
         return null;
-    };
-    const err = (message: string, location: IroError["location"], fatal: boolean) => {
+    }
+    function err(message: string, location: IroError["location"], fatal: boolean) {
         errors.push({ message, location, fatal });
-    };
-    const mandatory = <T extends N.Attribute["type"]>(name: string, type: T, node: N.Object) => {
+    }
+    function mandatory<T extends N.Attribute["type"]>(name: string, type: T, node: N.Object) {
         var attr = getNamedNode(name, type, node.body);
         if (attr) return attr;
         else return err(`Could not find mandatory attribute '${name}'`, node.loc, true) as typeof attr;
-    };
+    }
     var styles = new Map<string, Style>();
-    const getStyle = (name: string, node: N.Value) => {
+    function getStyle(name: string, node: N.Value) {
         var s = styles.get(name);
         if (s) return s;
         else err(`Could not find style '${name}'`, node.loc, true);
-    };
+    }
     var currentCollection: string;
     var currentTMContext: TMPatternComplex & { patterns: TMPattern[] };
     var currentAceRule: string;
 
-    const aceSubRule = (rule: string) => {
+    function aceSubRule(rule: string) {
         rule = rule.replace(/__\d+$/, "");
         var i = 1;
         var newRule: string;
@@ -207,10 +204,10 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         } while (aceGrammar.rules[newRule]);
         aceGrammar.rules[newRule] = [];
         return newRule;
-    };
+    }
 
     var expandStack: N.Attribute[] = [];
-    const expand = (attr: N.Attribute): string => {
+    function expand(attr: N.Attribute): string {
         if (expandStack.includes(attr)) {
             let trace = "";
             for (let s of expandStack) trace += scopes.get(s.name.name)?.fullName + " → ";
@@ -254,7 +251,7 @@ export function compile(ast: N.Grammar, options?: Partial<CompileOptions>) {
         }
         expandStack.pop();
         return out;
-    };
+    }
     function registerAttributes(body: N.Node[]) {
         // Attribute Declaration
         for (let node of body) {

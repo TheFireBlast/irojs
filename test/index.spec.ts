@@ -14,8 +14,7 @@ function testFile(file: string) {
         it("should compile", function () {
             if (!ast) return this.skip();
             compiled = compile(ast, {
-                textmate: true,
-                ace: true,
+                targets: ["textmate", "ace"]
             });
             expect(compiled.errors, "expected no errors").to.be.empty;
         });

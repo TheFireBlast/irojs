@@ -7,13 +7,13 @@ export * as nodes from "./nodes";
 export * as compiler from "./compiler";
 export * as ScopeManager from "./ScopeManager";
 export type { IroError, NearleyError };
-export const Rion: nearley.CompiledRules = require("./rion");
-export const grammar = nearley.Grammar.fromCompiled(Rion);
+const Rion: nearley.CompiledRules = require("./rion");
+const grammar = nearley.Grammar.fromCompiled(Rion);
 
-//TODO: use handwritten parser
-export function getParser() {
+function getParser() {
     return new nearley.Parser(grammar);
 }
+
 export function parse(input: string): Grammar {
     const parser = new nearley.Parser(grammar);
     var r = parser.feed(input).results[0];
@@ -34,6 +34,7 @@ export function parse(input: string): Grammar {
     }
     return r;
 }
+
 export function compile(
     input: string | Grammar,
     options?: Partial<CompileOptions>

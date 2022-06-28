@@ -37,8 +37,7 @@ if (parsed) {
 
     console.time("compiling took");
     var result = compile(parsed, {
-        textmate: true,
-        ace: true,
+        targets: ["textmate", "ace"]
     });
     console.timeEnd("compiling took");
 
