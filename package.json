@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "main": "dist/index.js",
     "bin": {
-        "iro": "dist/iro.js"
+        "iro": "bin/iro.js"
     },
     "author": "FireBlast",
     "license": "MIT",
