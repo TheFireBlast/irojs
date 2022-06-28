@@ -21,13 +21,14 @@ iro compile <source> --targets=<targetlist>
 
 Valid output targets:
 - `textmate` or `tm`
-    - `textmate.xml` (default)
+    - `textmate.xml` *(default)*
     - `textmate.json`
 - `ace`
-    - `ace.js` (default)
+    - `ace.js` *(default)*
     - `ace.json`
-- `ast` (outputs the rion ast)
-- `none`
+- `ast` &mdash; outputs the rion ast
+- `all` or `*` &mdash; matches all targets
+- `none` &mdash; only checks grammar
 
 Use `<target>.*` to match all extensions
 
