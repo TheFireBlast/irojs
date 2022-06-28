@@ -30,7 +30,7 @@ export function createCommand(exitOnFail = false) {
     const program = new Command();
     program
         .name("iro")
-        .description("A language grammar generator for syntax highlighters")
+        .description("A grammar generator for syntax highlighters")
         .version(require("../package.json").version, "-v, --version")
         .showSuggestionAfterError();
     program
