@@ -107,7 +107,7 @@ function getNamedNode<T extends (N.Node & { name: N.Identifier })["type"]>(
 }
 
 /**
- * @returns the count of subgroups in each capture group
+ * @returns the number of subgroups in each capture group
  */
 function getRegexGroups(regex: string) {
     var list: number[] = [];
@@ -129,7 +129,7 @@ function getRegexGroups(regex: string) {
 }
 
 export interface CompileOptions {
-    /**Compílation targets */
+    /**Compilation targets */
     targets: ("textmate" | "ace")[];
     /**Emit default token when compiling to ace */
     aceDefaultToken: boolean;
@@ -144,7 +144,8 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
         _options
     );
 
-    //TODO: selective compiling
+    //TODO: selective compilation
+    //  a possible but slow solution is to have a separate pass for each grammar target
     const TEXTMATE = options.targets.includes("textmate");
     const ACE = options.targets.includes("ace");
 
@@ -169,21 +170,31 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
         var targetName = stack[stack.length - 1];
         var target = inclusions.get(targetName);
         if (!target) return null;
-        for (var targetOfTarget of target) {
-            var _stack = [...stack, targetOfTarget];
-            if (stack.includes(targetOfTarget)) return _stack;
+        for (var subTarget of target) {
+            var _stack = [...stack, subTarget];
+            if (stack.includes(subTarget)) return _stack;
             var res = checkRecursion(_stack);
             if (res) return res;
         }
         return null;
     }
+    /**
+     * Pushes an error or warning to the error list
+     */
     function err(message: string, location: IroError["location"], fatal: boolean) {
         errors.push({ message, location, fatal });
     }
+    /**
+     * Checks if the attribute exists and pushes an error otherwise
+     * @param name The name of the attribute
+     * @param type The attribute's type
+     * @param node The attribute's parent node
+     * @returns returns the attribute if it exists
+     */
     function mandatory<T extends N.Attribute["type"]>(name: string, type: T, node: N.Object) {
         var attr = getNamedNode(name, type, node.body);
         if (attr) return attr;
-        else return err(`Could not find mandatory attribute '${name}'`, node.loc, true) as typeof attr;
+        else return err(`Could not find mandatory attribute '${name}'`, node.loc, true);
     }
     var styles = new Map<string, Style>();
     function getStyle(name: string, node: N.Value) {
@@ -195,6 +206,11 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
     var currentTMContext: TMPatternComplex & { patterns: TMPattern[] };
     var currentAceRule: string;
 
+    /**
+     * Creates an ace subrule
+     * @param rule The name of the rule
+     * @returns The name of the subrule
+     */
     function aceSubRule(rule: string) {
         rule = rule.replace(/__\d+$/, "");
         var i = 1;
@@ -207,6 +223,9 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
     }
 
     var expandStack: N.Attribute[] = [];
+    /**
+     * @returns the attribute value with expanded constants
+     */
     function expand(attr: N.Attribute): string {
         if (expandStack.includes(attr)) {
             let trace = "";
@@ -252,6 +271,10 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
         expandStack.pop();
         return out;
     }
+    /**
+     * Registers attributes into the current scope
+     * @param body Node to find attributes in
+     */
     function registerAttributes(body: N.Node[]) {
         // Attribute Declaration
         for (let node of body) {
@@ -297,6 +320,9 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
             }
         }
     }
+    /**
+     * Checks whether the value of a regex attribute is valid
+     */
     function validateRegex(regex: string, loc: N.SourceLocation) {
         if (!validRegexAttribute.test(regex)) {
             err(`'${regex}' does not match the regular expression ${validRegexAttribute}`, loc, true);
@@ -319,11 +345,11 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
     ) {
         if (validateRegex(regex, regexLoc)) {
             // The number of styles must either
-            // match the total number of groups
-            // or the number of top groups
+            // match the total number of regex capture groups eg. (a(b))(c(d(e))) -> 5
+            // or the number of top groups eg. (a(b))(c(d(e))) -> 2
             let groups = getRegexGroups(regex);
             let totalGroups = groups.reduce((a, b) => a + b);
-            // If the styles only cover the top groups, expand
+            // If there are only styles for the top groups, populate the style list
             if (styleList.length == groups.length && groups.length != totalGroups) {
                 let newList: typeof styleList = [];
                 for (let i = 0; i < styleList.length; i++) {
@@ -341,6 +367,9 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
         enforceDotPrefix(styleList);
     }
 
+    /**
+     * Traverses through an ast to generate grammars
+     */
     function traverse(node: N.Node) {
         if (node.type == "Grammar") {
             registerAttributes(node.body);
@@ -354,7 +383,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
             if (scopes.global.has("file_extensions")) {
                 tmGrammar.fileTypes = (scopes.global.get("file_extensions") as any).expanded as string[];
             }
-            // Styles have priority
+            // Styles are registered first
             let stylesCollection = node.body.find((n) => n.type == "Collection" && n.name.name == "styles");
             if (stylesCollection) traverse(stylesCollection);
             else err("Could not find mandatory collection 'styles'", NO_LOC, true);
@@ -431,7 +460,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                     let regex = scopes.get<true>(regexNode.name.name).expanded as string;
                     let styleList: [string, N.Value][] = (
                         scopes.get<true>(stylesNode.name.name).expanded as string[]
-                    ).map((v, i) => [v, stylesNode.value[i]]);
+                    ).map((v, i) => [v, stylesNode!.value[i]]);
                     validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
 
                     if (styleList.length == 1) {
@@ -499,7 +528,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         let regex = scopes.get<true>(regexNode.name.name).expanded as string;
                         let styleList: [string, N.Value][] = (
                             scopes.get<true>(stylesNode.name.name).expanded as string[]
-                        ).map((v, i) => [v, stylesNode.value[i]]);
+                        ).map((v, i) => [v, stylesNode!.value[i]]);
                         validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
 
                         let defaultStyle =
@@ -553,7 +582,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                     var regex = scopes.get<true>(regexNode.name.name).expanded as string;
                     let styleList: [string, N.Value][] = (
                         scopes.get<true>(stylesNode.name.name).expanded as string[]
-                    ).map((v, i) => [v, stylesNode.value[i]]);
+                    ).map((v, i) => [v, stylesNode!.value[i]]);
                     validateRegexAndStyleList(regex, regexNode.loc, styleList, stylesNode.loc);
 
                     let tmPattern = currentTMContext as TMPatternComplex;
@@ -585,7 +614,6 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                 } else if (kind == "include") {
                     let current = scopes.current.parent.name;
                     let target = (node.body[0] as N.String).value;
-                    let valid = true;
 
                     if (!inclusions.has(target)) {
                         err(`Unknown context '${target}'`, node.body[0].loc, true);
@@ -602,9 +630,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                     if (result && current == result[result.length - 1]) {
                         var trace = result.join(" → ");
                         err(`Cyclic inclusion detected (${trace})`, node.loc, true);
-                        valid = false;
-                    }
-                    if (valid) {
+                    } else {
                         currentTMContext.patterns.push({ include: "#" + target });
                         //NOTE: Include doesn't exist in ace, we're just adding this to be replaced later
                         aceGrammar.rules[currentAceRule].push({ include: target });
@@ -653,7 +679,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                     err(`Unexpected object type ${kind}`, node.kind.loc, true);
                 }
             } finally {
-                // ensures pop gets called even if we return after an erorr
+                // Ensures we pop the scope even if we return after an erorr
                 scopes.pop();
             }
         } else throw new Error("Unexpected node type " + node["type"]);
