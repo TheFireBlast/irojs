@@ -362,6 +362,10 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
             else if (styleList.length != totalGroups) {
                 err("Number of styles and regexp groups doesn't match", stylesLoc, true);
             }
+
+            //TODO: add this error check
+            //All captures must be surrounded by brackets (for compatibility with Ace editor).
+            //"\w([a-z][a-z0-9]*)" did not match regular expression  "^(?:\^|\\b|\\B)?(\(.*?\))+(?:\$|\\b|\\B)?$"
         }
 
         enforceDotPrefix(styleList);

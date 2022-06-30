@@ -1,5 +1,0 @@
-All captures must be surrounded by brackets (for compatibility with Ace editor).
-"\w([a-z][a-z0-9]*)" did not match regular expression  "^(?:\^|\\b|\\B)?(\(.*?\))+(?:\$|\\b|\\B)?$"
-
-One or more items within string set "mysamplea b" did not match regular expression  "^(?!.*?_$|_)[_0-9a-zA-Z\u00a0-\u2027\u202a-\ud7ff\ue000-\ufffd]+$"
-

@@ -5,7 +5,7 @@ import { parse, compile, nodes } from "../src/index";
 
 function testFile(file: string) {
     describe(file, function () {
-        var input = fs.readFileSync(path.join(__dirname, "grammars", file), "utf8");
+        var input = fs.readFileSync(path.join(__dirname, "../examples", file), "utf8");
         var ast!: nodes.Grammar;
         it("should parse", function () {
             expect(() => (ast = parse(input))).to.not.throw();
@@ -25,11 +25,10 @@ function testFile(file: string) {
     });
 }
 
-describe("Grammars", function () {
+describe("Examples", function () {
     //TODO: glob
-    testFile("sample.iro");
     testFile("rion.iro");
-    testFile("redlapis.iro");
+    testFile("sample.iro");
 });
 
 const DEFAULT_CONTEXTS = `\
@@ -58,6 +57,8 @@ styles [] {
 ${styles || DEFAULT_STYLES}
 }`;
 }
+
+//TODO:add more tests
 
 describe("Contexts Collection", function () {
     it("should require context objects to be named", function () {

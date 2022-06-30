@@ -34,7 +34,7 @@ describe("CLI", function () {
         await cleanOutput();
     });
     it("should output all targets", async function () {
-        runCLI(["compile", path.join(__dirname, "grammars/rion.iro"), "-o", OUT_PATH, "-t", "all"]);
+        runCLI(["compile", path.join(__dirname, "../examples/rion.iro"), "-o", OUT_PATH, "-t", "all"]);
         expect(await fs.readdir(OUT_PATH)).to.have.members(
             [
                 //
@@ -47,7 +47,7 @@ describe("CLI", function () {
         );
     });
     it("should not output files on fail", async function () {
-        runCLI(["compile", path.join(__dirname, "grammars/should_fail/fail_parser.iro"), "-o", OUT_PATH, "-t", "all"]);
+        runCLI(["compile", path.join(__dirname, "../README.md"), "-o", OUT_PATH, "-t", "all"]);
         expect(await fs.readdir(OUT_PATH)).to.be.empty;
     });
 });
