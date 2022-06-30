@@ -49,7 +49,7 @@ const iro = require("irojs");
 
 const myGrammar = "...";
 
-var result = iro.compile(myGrammar, { textmate: true });
+var result = iro.compile(myGrammar, { targets: ["textmate"] });
 
 console.log(result.textmate);
 ```
@@ -61,3 +61,9 @@ console.log(result.textmate);
 Use `pnpm build` to build the package.
 
 Use `pnpm types` to compile the type definition files.
+
+Next possible features:
+- Styles to CSS
+- HighlightJS target
+- PrismJS target
+- CodeMirror target

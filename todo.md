@@ -3,16 +3,27 @@
         -   [x] Textmate JSON
         -   [x] Textmate XML
         -   [x] Ace
+        -   [ ] CSS
+        -   [ ] HighlightJS
+            -   https://www.npmjs.com/package/highlight.js
+            -   https://github.com/TheFireBlast/highlightjs-mcfunction
+            -   https://github.com/fedonman/highlightjs-qsharp
+        -   PrismJS
+            -   https://www.npmjs.com/package/prismjs
+            -   https://prismjs.com/extending.html
+        -   CodeMirror
+            -   https://www.npmjs.com/package/codemirror
+            -   https://codemirror.net/examples/lang-package/
         -   [ ] Atom
+        -   [ ] Sublime 3
         -   [ ] Pygments
         -   [ ] Rouge
-        -   [ ] Sublime 3
     -   [ ] Unit testing
         -   [ ] Github workflow
     -   [ ] Code coverage
     -   [ ] Move to chevrotain
     -   [ ] Add more comments
--   [ ] Website
+-   [ ] Online Editor
     -   [x] Live preview
     -   [ ] Auto-completion
     -   [ ] Snippets
