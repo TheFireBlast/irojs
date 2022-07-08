@@ -52,9 +52,9 @@ export class ScopeManager {
     }
     get<certain extends boolean>(
         name: string,
-        scope: Scope = this.current
+        scope?: Scope
     ): certain extends true ? CompiledAttribute : CompiledAttribute | undefined {
-        var s: Scope | undefined = scope;
+        var s: Scope | undefined = scope || this.current;
         while (s) {
             var x = s.get(name);
             if (x !== undefined) return x;
