@@ -1,5 +1,5 @@
-<center><h1>Iro.js</h1></center>
-<center>A grammar generator for syntax highlighters.</center>
+<h1 align="center">IroJS</h1>
+<p align="center">A grammar generator for syntax highlighters.</p>
 <br>
 
 This project aims to be a superset of Chris Ainsley's [Iro](https://eeyo.io/iro/), a development tool designed to simplify the creation of syntax highlighters.
