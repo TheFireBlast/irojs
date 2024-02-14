@@ -711,10 +711,11 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
             // Remove unused rules
             if (r != "start" && !r.match(/__\d+$/)) delete aceGrammar.rules[r];
             // Add default token
-            else if (options.aceDefaultToken) {
-                let rr = aceGrammar.rules[r];
-                if (rr.length > 0 && "defaultToken" in rr[rr.length - 1]) rr.push({ defaultToken: "text" });
-            }
+            //TODO: why did i add this?
+            // else if (options.aceDefaultToken) {
+            //     let rr = aceGrammar.rules[r];
+            //     if (rr.length > 0 && "defaultToken" in rr[rr.length - 1]) rr.push({ defaultToken: "text" });
+            // }
         }
     }
 
