@@ -13,7 +13,7 @@
         "strict": true,
         "skipLibCheck": true
     },
-    "include": ["src/**/*", "test/**/*"],
+    "include": ["src/**/*"],
     "ts-node": {
         "swc": true
     }
