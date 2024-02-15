@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { parse, compile } from "./index";
-import * as chalk from "chalk";
+import chalk from "chalk";
 import { Command, InvalidOptionArgumentError } from "commander";
 import * as path from "path";
 import { prettyError } from "./utils";
