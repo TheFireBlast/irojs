@@ -118,7 +118,7 @@ function getRegexGroups(regex: string) {
         if (c == "\\") {
             i++;
         } else if (c == "(") {
-            if (depth > 0) captures++;
+            if (depth > 0 && regex[i + 1] != "?" && ":?!=".includes(regex[i + 2])) captures++;
             depth++;
         } else if (c == ")" && --depth == 0) {
             list.push(captures);
