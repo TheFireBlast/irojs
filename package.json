@@ -2,7 +2,7 @@
     "name": "irojs",
     "description": "A grammar generator for syntax highlighters.",
     "keywords": ["grammar", "generator", "syntax-highlighting"],
-    "version": "0.1.4",
+    "version": "0.1.5",
     "main": "dist/index.js",
     "bin": {
         "iro": "bin/iro.js"
