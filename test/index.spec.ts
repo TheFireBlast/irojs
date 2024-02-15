@@ -2,6 +2,7 @@ import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import { parse, compile, nodes } from "../src/index";
+import { AcePatternGeneral } from "../src/compiler";
 
 function testFile(file: string) {
     describe(file, function () {
@@ -14,7 +15,7 @@ function testFile(file: string) {
         it("should compile", function () {
             if (!ast) return this.skip();
             compiled = compile(ast, {
-                targets: ["textmate", "ace"]
+                targets: ["textmate", "ace"],
             });
             expect(compiled.errors, "expected no errors").to.be.empty;
         });
@@ -84,5 +85,19 @@ describe("Styles Collection", function () {
         // compiled.errors.forEach((e) => console.log(prettyError(e, grammar)));
         expect(compiled.errors).to.have.lengthOf(1);
         expect(compiled.errors[0].message).to.match(/unnamed style/i);
+    });
+});
+
+describe("Regex", function () {
+    it("non-capture groups should not count for style population", function () {
+        const grammar = makeTestGrammar(`\
+main : context {
+	: pattern {
+		regex		\\= \\b((?:a)(?!a)(?=a))(a)(a)\\b
+		styles []	 = .text, .text, .text;
+	}
+}`);
+        var compiled = compile(grammar, { targets: ["ace"] });
+        expect((compiled.ace.rules.start[0] as AcePatternGeneral).token).to.have.all.members(["string", "string", "string"]);
     });
 });
