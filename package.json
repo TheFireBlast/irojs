@@ -1,6 +1,7 @@
 {
     "name": "irojs",
     "description": "A grammar generator for syntax highlighters.",
+    "keywords": ["grammar", "generator", "syntax-highlighting"],
     "version": "0.1.2",
     "main": "dist/index.js",
     "bin": {
