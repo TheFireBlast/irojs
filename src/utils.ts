@@ -30,7 +30,7 @@ export function prettyError(error: IroError, code: string | string[], filePath?:
     const offset = s.column + tabCorrectionPre;
     const where = filePath
         ? `${chalk.blue(filePath)}:${chalk.yellow(error.location.start.line)}:${chalk.yellow(
-              error.location.start.column + 1
+              error.location.start.column + 1,
           )} - `
         : "";
     return `${where}${color(error.fatal ? "error" : "warning")}: ${error.message}

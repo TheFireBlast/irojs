@@ -24,8 +24,8 @@ try {
                     message: "Invalid syntax",
                     location: { start: loc, end: loc },
                 },
-                lines
-            )
+                lines,
+            ),
         );
     }
 }
@@ -37,7 +37,7 @@ if (parsed) {
 
     console.time("compiling took");
     var result = compile(parsed, {
-        targets: ["textmate", "ace"]
+        targets: ["textmate", "ace"],
     });
     console.timeEnd("compiling took");
 

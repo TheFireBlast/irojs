@@ -75,7 +75,7 @@ export function createCommand(exitOnFail = false) {
                     fs.writeFileSync(
                         path.join(outputPath, grammarName + suffix),
                         stringify ? JSON.stringify(data, null, 4) : data,
-                        "utf8"
+                        "utf8",
                     );
                 for (let t of targets) {
                     switch (t) {

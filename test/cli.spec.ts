@@ -20,7 +20,9 @@ function runCLI(args: string[], output: (out: string) => void = noop) {
 
 async function cleanOutput() {
     await Promise.all(
-        (await fs.readdir(OUT_PATH)).map((fname) => fs.rm(path.join(OUT_PATH, fname), { recursive: true, force: true }))
+        (await fs.readdir(OUT_PATH)).map((fname) =>
+            fs.rm(path.join(OUT_PATH, fname), { recursive: true, force: true }),
+        ),
     );
 }
 
@@ -43,7 +45,7 @@ describe("CLI", function () {
                 "rion.tmlanguage",
                 "rion.tmlanguage.json",
             ],
-            "expected output directory to have all target files"
+            "expected output directory to have all target files",
         );
     });
     it("should not output files on fail", async function () {

@@ -35,10 +35,7 @@ export function parse(input: string): Grammar {
     return r;
 }
 
-export function compile(
-    input: string | Grammar,
-    options?: Partial<CompileOptions>
-): ReturnType<typeof _compile> {
+export function compile(input: string | Grammar, options?: Partial<CompileOptions>): ReturnType<typeof _compile> {
     var ast: Grammar;
     if (typeof input == "string") {
         var parsed!: import("./nodes").Grammar;

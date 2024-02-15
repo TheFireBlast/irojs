@@ -101,7 +101,7 @@ function isAttribute(node: N.Node): node is N.Attribute {
 function getNamedNode<T extends (N.Node & { name: N.Identifier })["type"]>(
     name: string,
     type: T,
-    array: N.Node[]
+    array: N.Node[],
 ): N.Node & { type: T } {
     return array.find((n) => n.type == type && (n as any)["name"].name == name) as any;
 }
@@ -141,7 +141,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
             targets: [],
             aceDefaultToken: true,
         },
-        _options
+        _options,
     );
 
     //TODO: selective compilation
@@ -303,7 +303,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                                 name: node.name,
                                 value: element,
                                 loc: element.loc,
-                            }) as string
+                            }) as string,
                         );
                     }
                     (scopes.get(node.name.name) as CompiledAttribute).expanded = out;
@@ -341,7 +341,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
         regex: string,
         regexLoc: N.SourceLocation,
         styleList: [string, N.Value][],
-        stylesLoc: N.SourceLocation
+        stylesLoc: N.SourceLocation,
     ) {
         if (validateRegex(regex, regexLoc)) {
             // The number of styles must either
@@ -400,12 +400,12 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                     for (let c of n.body) {
                         if (c.type == "Object" && c.kind.name == "context" && c.name) {
                             let includeList = c.body.filter(
-                                (n) => n.type == "Object" && n.kind.name == "include"
+                                (n) => n.type == "Object" && n.kind.name == "include",
                             ) as N.Object[];
                             let targets = includeList.map((n) => (n.body[0] as N.String).value);
                             inclusions.set(
                                 c.name.name,
-                                targets.filter((t, i) => targets.indexOf(t) == i)
+                                targets.filter((t, i) => targets.indexOf(t) == i),
                             );
                         }
                     }
@@ -424,7 +424,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         err(
                             `Type identifiers must start with a dot. Did you mean to write '.${n.name.name}'?`,
                             n.name.loc,
-                            false
+                            false,
                         );
                         n.name.name = "." + n.name.name;
                     }
@@ -499,7 +499,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         invalid = true;
                     }
                     let pop = node.body.filter(
-                        (n) => n.type == "Object" && (n.kind.name == "pop" || n.kind.name == "eol_pop")
+                        (n) => n.type == "Object" && (n.kind.name == "pop" || n.kind.name == "eol_pop"),
                     ) as N.Object[];
                     if (pop.length == 0) {
                         err("missing pop object", node.loc, true);
@@ -509,18 +509,18 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         err(
                             "too many pop objects",
                             { start: pop[1].loc.start, end: pop[pop.length - 1].loc.end },
-                            true
+                            true,
                         );
                         invalid = true;
                     }
                     let hasNonPop = node.body.find(
-                        (n) => n.type == "Object" && n.kind.name != "pop" && n.kind.name != "eol_pop"
+                        (n) => n.type == "Object" && n.kind.name != "pop" && n.kind.name != "eol_pop",
                     );
                     if (hasNonPop && defaultStyleNode) {
                         err(
                             "Cannot set a default Style if a non-pop rule is provided or included (textmate mode)",
                             defaultStyleNode.loc,
-                            true
+                            true,
                         );
                         invalid = true;
                     }
@@ -644,7 +644,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         err(
                             `Unexpected object type ${kind}. Did you mean to place it in collection 'contexts'?`,
                             node.kind.loc,
-                            true
+                            true,
                         );
                         return;
                     }
@@ -677,7 +677,7 @@ export function compile(ast: N.Grammar, _options?: Partial<CompileOptions>) {
                         err(
                             `Unexpected object type ${kind}. Did you mean to place it in collection 'styles'?`,
                             node.kind.loc,
-                            true
+                            true,
                         );
                 } else {
                     err(`Unexpected object type ${kind}`, node.kind.loc, true);

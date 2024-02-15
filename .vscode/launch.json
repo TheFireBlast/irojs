@@ -21,7 +21,7 @@
             "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/src/test.ts",
             "sourceMaps": true,
-            "runtimeArgs": ["-r", "ts-node/register"],
+            "runtimeArgs": ["-r", "ts-node/register"]
         }
         // {
         //     "type": "node",

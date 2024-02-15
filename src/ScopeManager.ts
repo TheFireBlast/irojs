@@ -2,7 +2,12 @@ import { Attribute } from "./nodes";
 
 export class CompiledAttribute {
     expanded: string | string[] | undefined;
-    constructor(public name: string, public type: Attribute["type"], public scope: Scope, public source: Attribute) {}
+    constructor(
+        public name: string,
+        public type: Attribute["type"],
+        public scope: Scope,
+        public source: Attribute,
+    ) {}
     get isExpanded() {
         return this.expanded !== undefined;
     }
@@ -13,7 +18,10 @@ export class CompiledAttribute {
 
 export class Scope extends Map<string, CompiledAttribute> {
     children: Scope[] = [];
-    constructor(public name: string, public parent?: Scope) {
+    constructor(
+        public name: string,
+        public parent?: Scope,
+    ) {
         super();
     }
 }
@@ -52,7 +60,7 @@ export class ScopeManager {
     }
     get<certain extends boolean>(
         name: string,
-        scope?: Scope
+        scope?: Scope,
     ): certain extends true ? CompiledAttribute : CompiledAttribute | undefined {
         var s: Scope | undefined = scope || this.current;
         while (s) {

@@ -98,6 +98,10 @@ main : context {
 	}
 }`);
         var compiled = compile(grammar, { targets: ["ace"] });
-        expect((compiled.ace.rules.start[0] as AcePatternGeneral).token).to.have.all.members(["string", "string", "string"]);
+        expect((compiled.ace.rules.start[0] as AcePatternGeneral).token).to.have.all.members([
+            "string",
+            "string",
+            "string",
+        ]);
     });
 });
